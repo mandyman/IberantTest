@@ -15,8 +15,8 @@ namespace PackingListApp.Controllers
     [ApiController]
     public class TestController : ControllerBase
     {
-        public readonly ITestServices _testService;
-        public TestController(ITestServices testService)
+        public readonly ITestService _testService;
+        public TestController(ITestService testService)
         {
             _testService = testService;
         }
@@ -24,31 +24,31 @@ namespace PackingListApp.Controllers
         [HttpGet]
         public IActionResult Get(ODataQueryOptions<TestModel> options)
         {
-            var list = _testService.GetAll();
-            return Ok(new QueryResult<TestModel>(list, list.Count));
+            var data = _testService.GetAll();
+            return Ok(new QueryResult<TestModel>(data, data.Count()));
         }
 
         // GET: api/Test/5
         [HttpGet("{id}", Name = "Get")]
-        public IActionResult Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return Ok(_testService.Get(id));
+            return Ok(await _testService.GetByIdAsync(id));
         }
 
         // POST: api/Test
         [HttpPost]
-        public IActionResult Post([FromBody] NewTestModel value)
+        public async Task<IActionResult> Post([FromBody] NewTestModel value)
         {
-            var id = _testService.Add(value);
-            return Ok(new CommandHandledResult(true, id.ToString(), id.ToString(), id.ToString()));
-
+            TestModel postValue = _testService.GetFromObjectTransferModel(value);
+            TestModel result = await _testService.CreateAsync(postValue);
+            return Ok(new CommandHandledResult(true, result.Id.ToString(), result.Id.ToString(), result.Id.ToString()));
         }
 
         [HttpPut("{id}")]
 
-        public  IActionResult Put(int id, [FromBody] TestModel item)
+        public async Task<IActionResult> Put(int id, [FromBody] TestModel item)
         {
-            _testService.Put(id, item);
+            await _testService.UpdateAsync(item);
             return Ok(new CommandHandledResult(true, id.ToString(), id.ToString(), id.ToString()));
         }
     }

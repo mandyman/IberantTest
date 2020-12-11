@@ -8,45 +8,20 @@ using System.Threading.Tasks;
 
 namespace PackingListApp.Services
 {
-    public class TestServices : ITestServices
+    public class TestServices : GenericService<TestModel>, ITestService
     {
         private readonly TestContext _context;
-        public TestServices(TestContext context)
+        public TestServices(TestContext context):base(context)
         {
             _context = context;
         }
-
-        public int Add(NewTestModel testmodel)
+        public TestModel GetFromObjectTransferModel(NewTestModel model)
         {
-            var newtest = new TestModel()
+            return new TestModel
             {
-                Title = testmodel.Title,
-                Description = testmodel.Description
+                Title = model.Title,
+                Description = model.Description
             };
-            _context.TestModels.Add(newtest
-            );
-            _context.SaveChanges();
-            return newtest.Id;
-        }
-
-        public TestModel Get(int id)
-        {
-            return _context.TestModels.FirstOrDefault(t => t.Id == id);
-        }
-
-        public List<TestModel> GetAll()
-        {
-            return _context.TestModels.ToList();
-        }
-
-        public int Put(int id, TestModel item)
-        {
-            var itemput = _context.TestModels.FirstOrDefault(t => t.Id == id);
-            itemput.Description = item.Description;
-            itemput.Title = item.Title;
-            _context.SaveChanges();
-            return id;
-
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PackingListApp.Models
 {
-    public class TestModel
+    public class TestModel:IEntity
     {
         [Key]
         public int Id { get; set; }
