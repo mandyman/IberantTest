@@ -51,5 +51,13 @@ namespace PackingListApp.Controllers
             await _testService.UpdateAsync(item);
             return Ok(new CommandHandledResult(true, id.ToString(), id.ToString(), id.ToString()));
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            TestModel item = await _testService.GetByIdAsync(id);
+            await _testService.DeleteAsync(item);
+            return Ok(new CommandHandledResult(true, id.ToString(), id.ToString(), id.ToString()));
+        }
     }
 }

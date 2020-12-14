@@ -50,5 +50,13 @@ namespace PackingListApp.Controllers
                 await _userService.UpdateAsync(item);
                 return Ok(new CommandHandledResult(true, id.ToString(), id.ToString(), id.ToString()));
             }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            User item = await _userService.GetByIdAsync(id);
+            await _userService.DeleteAsync(item);
+            return Ok(new CommandHandledResult(true, id.ToString(), id.ToString(), id.ToString()));
+        }
     }
 }
