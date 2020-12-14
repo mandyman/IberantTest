@@ -80,7 +80,9 @@ export abstract class FormStore<T> extends ReduxRepository<FormModel<T>> {
                     };
                 },
                 onError: (error: any) => ({
-                    ...this.state, isBusy: false, result: error && error.response && error.response.data && error.response.data.messages ? error.response.data : {
+                    ...this.state,
+                    isBusy: false,
+                    result: error && error.response && error.response.data && error.response.data.messages ? error.response.data : {
                         isSuccess: false,
                         items: [],
                         messages: [{ body: error.message || error, level: 'Error' }]
@@ -125,6 +127,7 @@ export abstract class FormStore<T> extends ReduxRepository<FormModel<T>> {
     @autobind
     public async submit(): Promise<CommandResult<T>> {
         const validationResult = this.validate(this.state.item as T);
+
         if (!validationResult.isValid) {
             this.dispatch(this.ENTITY_VALIDATED, validationResult);
             return Promise.resolve({

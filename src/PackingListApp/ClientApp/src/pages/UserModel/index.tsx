@@ -5,37 +5,33 @@ import { TableModel, TableView } from "../../components/collections/table";
 import { RouteComponentProps } from "react-router";
 import { Query, ItemState } from "../../stores/dataStore";
 import {
-    TestItemsStore,
-    TestItem
-} from "src/stores/test-store";
+    UsersStore,
+    User
+} from "src/stores/user-store";
 import { connect } from "redux-scaffolding-ts";
 import autobind from "autobind-decorator";
 import { CommandResult } from "../../stores/types";
 import { Link } from "react-router-dom";
 import { formatDate } from "src/utils/object";
 const { Content } = Layout;
-import NewTestItemView from "./body"
+import NewUserView from "./body"
 
-interface TestItemListProps extends RouteComponentProps { }
+interface UserListProps extends RouteComponentProps { }
 
-interface TestItemListState {
+interface UserListState {
     query: Query;
     newShow: boolean;
 }
 
-@connect(["TestItems", TestItemsStore])
-export default class TestItemListPage extends Component<TestItemListProps, TestItemListState>
-{
+@connect(["Users", UsersStore])
+export default class UserListPage extends Component<UserListProps, UserListState> {
     private id: number = -1;
-    private get TestItemsStore() {
-        console.log("Here trying to get TestItemsStore");
-        console.log(this.props)
-        return (this.props as any).TestItems as TestItemsStore;
+    private get UsersStore() {
+        return (this.props as any).Users as UsersStore;
     }
 
-    constructor(props: TestItemListProps) {
+    constructor(props: UserListProps) {
         super(props);
-
         this.state = {
             query: {
                 searchQuery: "",
@@ -47,9 +43,6 @@ export default class TestItemListPage extends Component<TestItemListProps, TestI
             },
             newShow: false
         };
-
-        console.log("Here in Items Table");
-
     }
 
     componentWillMount() {
@@ -59,7 +52,7 @@ export default class TestItemListPage extends Component<TestItemListProps, TestI
 
     @autobind
     private async load(query: Query) {
-        await this.TestItemsStore.getAllAsync(query);
+        await this.UsersStore.getAllAsync(query);
     }
 
     @autobind
@@ -74,8 +67,8 @@ export default class TestItemListPage extends Component<TestItemListProps, TestI
     }
 
     @autobind
-    private async onSaveItem(item: TestItem, state: ItemState) {
-        var result = await this.TestItemsStore.saveAsync(
+    private async onSaveItem(item: User, state: ItemState) {
+        var result = await this.UsersStore.saveAsync(
             `${item.id}`,
             item,
             state
@@ -92,10 +85,10 @@ export default class TestItemListPage extends Component<TestItemListProps, TestI
 
     @autobind
     private async onDeleteRow(
-        item: TestItem,
+        item: User,
         state: ItemState
     ): Promise<CommandResult<any>> {
-        return await this.TestItemsStore.deleteAsync(`${item.id}`);
+        return await this.UsersStore.deleteAsync(`${item.id}`);
     }
 
     render() {
@@ -103,41 +96,47 @@ export default class TestItemListPage extends Component<TestItemListProps, TestI
             query: this.state.query,
             columns: [
                 {
-                    field: "title",
-                    title: "Title",
+                    field: "Name",
+                    title: "Name",
                     renderer: data =>
 
-                    <span>{data.title}</span>,
+                        <span>{data.name}</span>,
 
                     editor: data => <Input />
                 },
                 {
-                    field: "description",
-                    title: "Description",
-                    renderer: data => <span>{data.description}</span>,
+                    field: "LastName",
+                    title: "LastName",
+                    renderer: data => <span>{data.lastName}</span>,
+                    editor: data => <Input />
+                },
+                {
+                    field: "Address",
+                    title: "Address",
+                    renderer: data => <span>{data.address}</span>,
                     editor: data => <Input />
                 },
 
 
             ],
-            data: this.TestItemsStore.state,
+            data: this.UsersStore.state,
             sortFields: [
 
 
             ]
-        } as TableModel<TestItem>;
+        } as TableModel<User>;
 
         return (
             <Layout>
-                <HeaderComponent title="TestModels" canGoBack={true} />
+                <HeaderComponent title="UserModels" canGoBack={true} />
 
                 <Content className="page-content">
-                    {this.TestItemsStore.state.result &&
-                        !this.TestItemsStore.state.result.isSuccess && (
+                    {this.UsersStore.state.result &&
+                        !this.UsersStore.state.result.isSuccess && (
                             <Alert
                                 type="error"
                                 message={"Ha ocurrido un error"}
-                                description={this.TestItemsStore.state.result.messages
+                                description={this.UsersStore.state.result.messages
                                     .map(o => o.body)
                                     .join(", ")}
                             />
@@ -156,7 +155,7 @@ export default class TestItemListPage extends Component<TestItemListProps, TestI
                             hidepagination={true}
                             canEdit={true}
                         />
-                        {this.state.newShow && <NewTestItemView onClose={this.onNewItemClosed} />}
+                        {this.state.newShow && <NewUserView onClose={this.onNewItemClosed} />}
                     </div>
                 </Content>
             </Layout>

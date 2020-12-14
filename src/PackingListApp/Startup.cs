@@ -52,7 +52,7 @@ namespace PackingListApp
                 }
             });
             services.AddTransient<ITestService, TestServices>();
-            services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IUserService, UserServices>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

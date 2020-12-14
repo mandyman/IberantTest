@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace PackingListApp.Services
 {
-    public class UserService : GenericService<User>, IUserService
+    public class UserServices : GenericService<User>, IUserService
     {
         private readonly TestContext context;
 
-        public UserService(TestContext context) : base(context)
+        public UserServices(TestContext context) : base(context)
         {
             this.context = context;
         }
