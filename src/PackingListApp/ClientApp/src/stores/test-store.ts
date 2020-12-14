@@ -25,10 +25,7 @@ export class TestItemsStore extends DataStore<TestItem> {
             discard: item => { }
         }, container);
     }
-
-  
-
-   
+ 
 }
 
 export interface NewTestItem {

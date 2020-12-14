@@ -149,6 +149,7 @@ export default class UserListPage extends Component<UserListProps, UserListState
                             onQueryChanged={(q: Query) => this.onQueryChanged(q)}
                             onNewItem={this.onNewItem}
                             onRefresh={() => this.load(this.state.query)}
+                            onDeleteRow={this.onDeleteRow}
                             canDelete={true}
                             canCreateNew={true}
                             onSaveRow={this.onSaveItem}
