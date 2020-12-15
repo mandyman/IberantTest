@@ -1,12 +1,14 @@
 import React, { Component } from "react";
-import { Layout, Input, Alert, Row, Col } from "antd";
+import { Layout, Switch, Select, Input, Checkbox, Alert, Row, Col } from "antd";
 import HeaderComponent from "../../components/shell/header";
 import { TableModel, TableView } from "../../components/collections/table";
-import { RouteComponentProps } from "react-router";
+import { RouteComponentProps, } from "react-router";
 import { Query, ItemState } from "../../stores/dataStore";
 import {
     UsersStore,
-    User
+    User,
+    AdminType,
+    AdminTypeToString
 } from "src/stores/user-store";
 import { connect } from "redux-scaffolding-ts";
 import autobind from "autobind-decorator";
@@ -21,6 +23,7 @@ interface UserListProps extends RouteComponentProps { }
 interface UserListState {
     query: Query;
     newShow: boolean;
+    disabledAdminType: boolean;
 }
 
 @connect(["Users", UsersStore])
@@ -41,7 +44,8 @@ export default class UserListPage extends Component<UserListProps, UserListState
                 skip: 0,
                 take: 10
             },
-            newShow: false
+            newShow: false,
+            disabledAdminType: true
         };
     }
 
@@ -53,6 +57,11 @@ export default class UserListPage extends Component<UserListProps, UserListState
     @autobind
     private async load(query: Query) {
         await this.UsersStore.getAllAsync(query);
+    }
+
+    @autobind
+    private onSwitchChanged(checked: boolean) {
+        this.setState({ disabledAdminType: !checked});
     }
 
     @autobind
@@ -111,17 +120,30 @@ export default class UserListPage extends Component<UserListProps, UserListState
                     editor: data => <Input />
                 },
                 {
-                    field: "Address",
-                    title: "Address",
-                    renderer: data => <span>{data.address}</span>,
+                    field: "Description",
+                    title: "Description",
+                    renderer: data => <span>{data.description}</span>,
                     editor: data => <Input />
                 },
-
-
+                {
+                    field: "IsAdmin",
+                    title: "IsAdmin",
+                    renderer: data => <span>{data.isAdmin ? <Checkbox checked={true} /> : <Checkbox checked={false} />}</span>,
+                    editor: data => <Switch onChange={this.onSwitchChanged} />
+                },
+                {
+                    field: "AdminType",
+                    title: "AdminType",
+                    renderer: data => <span>{data.isAdmin ? AdminTypeToString[data.adminType] : null}</span>,
+                    editor: data => <Select disabled={this.state.disabledAdminType} defaultValue={AdminType.Normal}>
+                        <Select.Option value={AdminType.Normal}>Normal</Select.Option>
+                        <Select.Option value={AdminType.Vip}>VIP</Select.Option>
+                        <Select.Option value={AdminType.King}>King</Select.Option>
+                    </Select>
+                },
             ],
             data: this.UsersStore.state,
             sortFields: [
-
 
             ]
         } as TableModel<User>;

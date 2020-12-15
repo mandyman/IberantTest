@@ -110,7 +110,6 @@ export abstract class DataStore<T extends any> extends ReduxRepository<
         container: Container
     ) {
         super(initialState);
-        console.log("Here in DataStore");
 
         this.container = container;
         this.ENTITY_LIST_UPDATE = `${entityName}_LIST_UPDATE`;
@@ -125,7 +124,6 @@ export abstract class DataStore<T extends any> extends ReduxRepository<
                 return {
                     onStart: () => ({ ...this.state, isBusy: true }),
                     onSuccess: (value: any) => {
-                        console.log(value.data);
                         return {
                             ...this.state,
                             isBusy: false,
@@ -353,7 +351,6 @@ export abstract class DataStore<T extends any> extends ReduxRepository<
 
     public async getAllAsync(query: Query, data?: any): Promise<QueryResult<T>> {
         let httpService = this.container.get<HttpService>(HttpService);
-        console.log("outgoing get :" + `${this.baseUrl}?${DataStore.buildUrl(query)}`);
         const result = await this.dispatchAsync(
             this.ENTITY_LIST_UPDATE as string,
             httpService.get<QueryResult<T>>(
@@ -361,7 +358,6 @@ export abstract class DataStore<T extends any> extends ReduxRepository<
                 data
             )
         );
-        console.log(result.data);
         return result.data;
     }
 

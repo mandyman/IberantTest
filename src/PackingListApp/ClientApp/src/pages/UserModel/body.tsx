@@ -1,8 +1,8 @@
 ﻿import * as React from 'react'
-import { Form, Spin, Select, Input, Checkbox, Modal, Row, Col, Alert, InputNumber, Table } from 'antd';
+import { Form, Spin, Select, Input, Checkbox, Switch, Radio, Modal, Row, Col, Alert, InputNumber, Table } from 'antd';
 import { FormComponentProps } from 'antd/lib/form';
 let FormItem = Form.Item;
-import { NewUser, NewUserStore } from 'src/stores/user-store';
+import { AdminType, NewUser, NewUserStore, AdminTypeToString } from 'src/stores/user-store';
 import { connect } from 'redux-scaffolding-ts'
 import { nameof } from 'src/utils/object';
 import autobind from 'autobind-decorator';
@@ -26,9 +26,29 @@ interface ClassFormBodyProps {
     getFieldDecorator<T extends Object = {}>(id: keyof T, options?: GetFieldDecoratorOptions): (node: React.ReactNode) => React.ReactNode;
 }
 
-export class TestItemFormBody extends React.Component<ClassFormBodyProps> {
+interface UserFormBodyState {
+    disabled: boolean
+}
+
+export class UserFormBody extends React.Component<ClassFormBodyProps, UserFormBodyState> {
+    state = {
+        disabled : true
+    }
+
+    @autobind
+    private onSwitchChanged(checked: boolean) {
+        this.setState({ disabled: !checked })
+    }
+
+    constructor(props: any) {
+        super(props);
+        var item = this.props.item || {} as NewUser;
+        this.state = { disabled: !item.isAdmin }
+    }
+
     render() {
         const { getFieldDecorator } = this.props;
+        const { disabled } = this.state;
 
         var item = this.props.item || {} as NewUser;
         return <Form id="modaForm" onSubmit={() => { if (this.props.onSave) { this.props.onSave(); } }}>
@@ -54,14 +74,38 @@ export class TestItemFormBody extends React.Component<ClassFormBodyProps> {
                 </Col>
 
                 <Col span={12}>
-                    <FormItem label={'Address'}>
-                        {getFieldDecorator(nameof<NewUser>('address'), {
-                            initialValue: item.address,
+                    <FormItem label={'Description'}>
+                        {getFieldDecorator(nameof<NewUser>('description'), {
+                            initialValue: item.description,
                         })(
                             <Input />
                         )}
                     </FormItem>
                 </Col>
+
+                <Col span={12}>
+                    <FormItem label={'Is Admin'}>
+                        {getFieldDecorator(nameof<NewUser>('isAdmin'), {
+                            initialValue: item.isAdmin,
+                        })(
+                            <Switch onChange={this.onSwitchChanged}/>
+                        )}
+                    </FormItem>
+                </Col>
+                {!disabled ? <Col span={12}>
+                    <FormItem label={'Admin Type'}>
+                        {getFieldDecorator(nameof<NewUser>('adminType'), {
+                            initialValue: AdminType.Normal,
+                        })(
+                            <Select disabled={this.state.disabled}>
+                                <Select.Option value={AdminType.Normal}>Normal</Select.Option>
+                                <Select.Option value={AdminType.Vip}>VIP</Select.Option>
+                                <Select.Option value={AdminType.King}>King</Select.Option>
+                            </Select>
+                        )}
+                    </FormItem>
+                </Col> : null}
+                
             </Row>
         </Form>
     }
@@ -91,6 +135,7 @@ class NewUserView extends React.Component<NewUserViewProps & FormComponentProps,
                 var values = self.props.form.getFieldsValue();
                 if (!event) {
                     values = { ...values, };
+
                     self.UsersStore.change(values);
                     self.UsersStore.submit().then(result => {
                         if (result.isSuccess) {
@@ -120,7 +165,7 @@ class NewUserView extends React.Component<NewUserViewProps & FormComponentProps,
                 onOk={this.onCreateNewItem}
                 closable={false}
                 width='800px'
-                title={"New TestItem"}>
+                title={"New User"}>
                 {this.UsersStore.state.result && !this.UsersStore.state.result.isSuccess &&
                     <Alert type='error'
                         message="Ha ocurrido un error"
@@ -128,7 +173,7 @@ class NewUserView extends React.Component<NewUserViewProps & FormComponentProps,
                     />
                 }
                 <Spin spinning={this.UsersStore.state.isBusy}>
-                    <TestItemFormBody item={this.UsersStore.state.item} getFieldDecorator={getFieldDecorator} getFieldValue={this.props.form.getFieldValue} setFieldsValue={this.props.form.setFieldsValue} onSave={this.onCreateNewItem} />
+                    <UserFormBody item={this.UsersStore.state.item} getFieldDecorator={getFieldDecorator} getFieldValue={this.props.form.getFieldValue} setFieldsValue={this.props.form.setFieldsValue} onSave={this.onCreateNewItem} />
                 </Spin>
             </Modal>
         );

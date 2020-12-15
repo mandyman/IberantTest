@@ -28,8 +28,6 @@ export default class TestItemListPage extends Component<TestItemListProps, TestI
 {
     private id: number = -1;
     private get TestItemsStore() {
-        console.log("Here trying to get TestItemsStore");
-        console.log(this.props)
         return (this.props as any).TestItems as TestItemsStore;
     }
 
@@ -48,7 +46,6 @@ export default class TestItemListPage extends Component<TestItemListProps, TestI
             newShow: false
         };
 
-        console.log("Here in Items Table");
 
     }
 

@@ -6,11 +6,38 @@ import { AxiosResponse } from 'axios';
 import { container } from '../inversify.config';
 import { CommandResult } from './types';
 
+
+export const AdminTypeToString = {0:"Normal", 1:"Vip", 2:"King"}
+export enum AdminType {
+    Normal,
+    Vip,
+    King
+}
+
+
 export interface User {
     id: number;
     name: string;
     lastName: string;
-    address: string;
+    description: string;
+    isAdmin: boolean;
+    adminType: AdminType;
+}
+
+function logUser(user: NewUser) {
+    try {
+        console.log("[LOG] User")
+        console.log("name: " + user.name)
+        console.log("lastName: " + user.lastName)
+        console.log("Description: " + user.description)
+        console.log("isAdmin: " + user.isAdmin)
+        if (user.isAdmin) {
+            console.log("AdminType: " + user.adminType)
+        }
+        console.log("[LOG] End")
+    } catch (e) {
+
+    }
 }
 
 @repository("@@User", "User.summary")
@@ -31,7 +58,9 @@ export class UsersStore extends DataStore<User> {
 export interface NewUser {
     name: string,
     lastName: string,
-    address: string,
+    description: string,
+    isAdmin: boolean,
+    adminType: AdminType
 }
 
 export class NewUserValidator extends Validator<NewUser> {
@@ -45,6 +74,11 @@ export class NewUserValidator extends Validator<NewUser> {
         this.ruleFor(x => x.lastName)
             .notNull()
             .withMessage("LastName cant be empty");
+
+        this.ruleFor(x => x.adminType)
+            .notNull()
+            .when(x => x.isAdmin)
+            .withMessage("An admin type must be selected");
     }
 }
 
@@ -77,6 +111,11 @@ export class UserValidator extends Validator<User> {
         this.ruleFor(x => x.lastName)
             .notNull()
             .withMessage("LastName cant null");
+
+        this.ruleFor(x => x.adminType)
+            .notNull()
+            .when(x => x.isAdmin)
+            .withMessage("Admin type cant be null");
     }
 }
 
@@ -86,6 +125,8 @@ export class UserStore extends FormStore<User> {
     baseUrl: string = "api/user";
 
     protected validate(item: User) {
+        console.log("validating user")
+        logUser(item)
         return new UserValidator().validate(item);
     }
 

@@ -24,7 +24,9 @@ namespace PackingListApp.Services
             {
                 Name = model.Name,
                 LastName = model.LastName,
-                Address = model.Address
+                Description = model.Description,
+                IsAdmin = model.IsAdmin,
+                AdminType = model.AdminType,
             };
         }
     }
