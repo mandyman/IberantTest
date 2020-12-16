@@ -1,12 +1,10 @@
-﻿import HttpService from '../services/http-service';
-import { AxiosResponse } from 'axios';
-import { ReduxRepository } from 'redux-scaffolding-ts';
-import { CommandResult, CommandModel, Message } from './types';
+﻿import autobind from 'autobind-decorator';
 import { Container } from "inversify";
-import autobind from 'autobind-decorator';
-import { clone, delay } from '../utils/object';
 import * as lakmus from 'lakmus';
-import { createPatch } from 'rfc6902';
+import { ReduxRepository } from 'redux-scaffolding-ts';
+import HttpService from '../services/http-service';
+import { clone, delay } from '../utils/object';
+import { CommandModel, CommandResult, Message } from './types';
 
 export interface FormModel<T> extends CommandModel<T> {
     status: 'New' | 'Unchanged' | 'Modified';
@@ -162,20 +160,140 @@ export abstract class FormStore<T> extends ReduxRepository<FormModel<T>> {
         }
     }
 
+    public async putSubmit(path: string): Promise<CommandResult<T>> {
+        const validationResult = this.validate(this.state.item as T);
+
+        if (!validationResult.isValid) {
+            this.dispatch(this.ENTITY_VALIDATED, validationResult);
+            return Promise.resolve({
+                isSuccess: false
+            } as CommandResult<T>);
+        } else {
+            var httpService = this.container.get<HttpService>(HttpService);
+            var item = this.state.item;
+
+            return this.dispatchAsync(this.ENTITY_CHANGED, new Promise<CommandResult<T>>((resolve, reject) => {
+                httpService.put<T, CommandResult<T>>(`${this.baseUrl}/${encodeURIComponent(path)}`, item as T)
+                    .then(async httpResult => {
+                        var wait: boolean = true;
+                        var ctx = 0;
+                        var ms = 100;
+                        do {
+                            await delay(ms);
+                            try {
+                                var existsResult = await httpService.get(`${this.baseUrl}/${this.removeEmptyString(httpResult.data.identifier as string) || this.removeEmptyString(httpResult.data.aggregateRootId as string) || httpResult.data.title}`);
+                                wait = existsResult.status == 404;
+                                ctx++;
+                            } catch (exception) {
+                                wait = !exception || exception.status == 404
+                                ctx++;
+                            }
+                            ms = ms * 2;
+                        } while (wait && ctx < 8);
+                        resolve(httpResult.data);
+                    }).catch(error => reject(error))
+            }));
+        }
+    }
+
     private removeEmptyString(value: string) {
         if (value == "" || value == " ")
             return undefined;
         return value;
     }
 
-    protected patch(actionName: string, path: string, partial: Partial<T>) {
-        var httpService = this.container.get<HttpService>(HttpService);
-        return this.dispatchAsync(actionName, httpService.patch(`${this.baseUrl}/${path}`, createPatch(this.state.item, partial)), partial);
+    protected async patch(actionName: string, path: string, partial: Partial<T>): Promise<CommandResult<T>> {
+        const validationResult = this.validate(this.state.item as T);
+        if (!validationResult.isValid) {
+            this.dispatch(this.ENTITY_VALIDATED, validationResult);
+            return Promise.resolve({
+                isSuccess: false,
+            } as CommandResult<T>);
+        } else {
+            var httpService = this.container.get<HttpService>(HttpService);
+            const item = this.state.item
+            if (item) {
+                return this.dispatchAsync(this.ENTITY_CHANGED, new Promise<CommandResult<T>>((resolve, reject) => {
+                    httpService.patch<T, CommandResult<T>>(`${this.baseUrl}/${encodeURIComponent(path)}`, item as T)
+                        .then(async httpResult => {
+                            var wait: boolean = true;
+                            var ctx = 0;
+                            var ms = 100;
+                            do {
+                                await delay(ms);
+                                try {
+                                    var existsResult = await httpService.get(`${this.baseUrl}/${this.removeEmptyString(httpResult.data.identifier as string) || this.removeEmptyString(httpResult.data.aggregateRootId as string) || httpResult.data.title}`);
+                                    wait = existsResult.status == 404;
+                                    ctx++;
+                                } catch (exception) {
+                                    wait = !exception || exception.status == 404
+                                    ctx++;
+                                }
+                                ms = ms * 2;
+                            } while (wait && ctx < 8);
+                            resolve(httpResult.data);
+                        }).catch(error => {
+                            reject(error)
+                        })
+                }));
+            }
+            else {
+                return this.dispatchAsync(this.ENTITY_CHANGED, new Promise<CommandResult<T>>((resolve, reject) => {
+                    httpService.put<T, CommandResult<T>>(`${this.baseUrl}/${encodeURIComponent(path)}`, item as T)
+                        .then(async httpResult => {
+                            var wait: boolean = true;
+                            var ctx = 0;
+                            var ms = 100;
+                            do {
+                                await delay(ms);
+                                try {
+                                    var existsResult = await httpService.get(`${this.baseUrl}/${this.removeEmptyString(httpResult.data.identifier as string) || this.removeEmptyString(httpResult.data.aggregateRootId as string) || httpResult.data.title}`);
+                                    wait = existsResult.status == 404;
+                                    ctx++;
+                                } catch (exception) {
+                                    wait = !exception || exception.status == 404
+                                    ctx++;
+                                }
+                                ms = ms * 2;
+                            } while (wait && ctx < 8);
+                            resolve(httpResult.data);
+                        }).catch(error => reject(error))
+                }));
+            }
+        }
     }
 
-    protected put(actionName: string, path: string, partial: Partial<T>) {
-        var httpService = this.container.get<HttpService>(HttpService);
-        return this.dispatchAsync(actionName, httpService.put(`${this.baseUrl}/${path}`, partial), partial);
+    protected async put(actionName: string, path: string, partial: Partial<T>): Promise<CommandResult<T>>{
+        const validationResult = this.validate(partial as T);
+        if (!validationResult.isValid) {
+            this.dispatch(this.ENTITY_VALIDATED, validationResult);
+            return Promise.resolve({
+                isSuccess: false
+            } as CommandResult<T>);
+        } else {
+            var httpService = this.container.get<HttpService>(HttpService);
+            return this.dispatchAsync(this.ENTITY_CHANGED, new Promise<CommandResult<T>>((resolve, reject) => {
+                httpService.put<T, CommandResult<T>>(`${this.baseUrl}/${encodeURIComponent(path)}`, partial as T)
+                    .then(async httpResult => {
+                        var wait: boolean = true;
+                        var ctx = 0;
+                        var ms = 100;
+                        do {
+                            await delay(ms);
+                            try {
+                                var existsResult = await httpService.get(`${this.baseUrl}/${this.removeEmptyString(httpResult.data.identifier as string) || this.removeEmptyString(httpResult.data.aggregateRootId as string) || httpResult.data.title}`);
+                                wait = existsResult.status == 404;
+                                ctx++;
+                            } catch (exception) {
+                                wait = !exception || exception.status == 404
+                                ctx++;
+                            }
+                            ms = ms * 2;
+                        } while (wait && ctx < 8);
+                        resolve(httpResult.data);
+                    }).catch(error => reject(error))
+            }));
+        }
     }
 
     protected onPatch(): any {

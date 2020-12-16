@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Layout, Switch, Select, Input, Checkbox, Alert, Row, Col } from "antd";
+import { Layout, Switch, Select, Input, Checkbox, Alert, Row, Col, Form } from "antd";
 import HeaderComponent from "../../components/shell/header";
 import { TableModel, TableView } from "../../components/collections/table";
 import { RouteComponentProps, } from "react-router";
@@ -8,7 +8,7 @@ import {
     UsersStore,
     User,
     AdminType,
-    AdminTypeToString
+    AdminTypeToString,
 } from "src/stores/user-store";
 import { connect } from "redux-scaffolding-ts";
 import autobind from "autobind-decorator";
@@ -16,13 +16,15 @@ import { CommandResult } from "../../stores/types";
 import { Link } from "react-router-dom";
 import { formatDate } from "src/utils/object";
 const { Content } = Layout;
-import NewUserView from "./body"
+import NewUserView, { UserView, UserViewProps, ExUserView } from "./body"
 
 interface UserListProps extends RouteComponentProps { }
 
 interface UserListState {
     query: Query;
     newShow: boolean;
+    editShow: boolean;
+    currentUserEdit?: User;
     disabledAdminType: boolean;
 }
 
@@ -45,6 +47,7 @@ export default class UserListPage extends Component<UserListProps, UserListState
                 take: 10
             },
             newShow: false,
+            editShow: false,
             disabledAdminType: true
         };
     }
@@ -76,19 +79,18 @@ export default class UserListPage extends Component<UserListProps, UserListState
     }
 
     @autobind
+    private async onStartedUpdateItem(user: User) {
+        this.setState({ editShow: true, newShow: false, currentUserEdit: user })
+    }
+
+    @autobind
     private async onSaveItem(item: User, state: ItemState) {
-        var result = await this.UsersStore.saveAsync(
-            `${item.id}`,
-            item,
-            state
-        );
         await this.load(this.state.query);
-        return result;
     }
 
     @autobind
     private onNewItemClosed() {
-        this.setState({ newShow: false });
+        this.setState({ newShow: false, editShow: false, currentUserEdit: undefined });
         this.load(this.state.query);
     }
 
@@ -170,18 +172,21 @@ export default class UserListPage extends Component<UserListProps, UserListState
                             model={tableModel}
                             onQueryChanged={(q: Query) => this.onQueryChanged(q)}
                             onNewItem={this.onNewItem}
+                            onEditItem={this.onStartedUpdateItem}
                             onRefresh={() => this.load(this.state.query)}
                             onDeleteRow={this.onDeleteRow}
                             canDelete={true}
                             canCreateNew={true}
-                            onSaveRow={this.onSaveItem}
                             hidepagination={true}
                             canEdit={true}
+                            isEditableByModal={true}
                         />
                         {this.state.newShow && <NewUserView onClose={this.onNewItemClosed} />}
+                        {this.state.editShow && this.state.currentUserEdit && <ExUserView item={this.state.currentUserEdit} onClose={this.onNewItemClosed} />}
                     </div>
                 </Content>
             </Layout>
         );
     }
 }
+

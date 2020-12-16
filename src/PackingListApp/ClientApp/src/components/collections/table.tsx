@@ -11,6 +11,7 @@ import FileSaver from 'file-saver';
 import { withSize } from 'react-sizeme'
 import { CommandResult } from '../../stores/types';
 import { resolve } from '../../inversify.config';
+import { NewUser, User } from '../../stores/user-store';
 
 export interface TableSortFieldDefinition {
     field: string;
@@ -61,6 +62,7 @@ export interface TableProps<T> {
     exportable?: boolean;
     canCreateNew?: boolean;
     onNewItem?: () => void;
+    onEditItem?: (item: T) => void;
     canEdit?: boolean;
     canSort?: boolean;
     onSaveRow?: (item: T, state: ItemState) => Promise<CommandResult<any>>;
@@ -80,6 +82,8 @@ export interface TableProps<T> {
     onSelection?: (ids: any[]) => void;
     autosave?: boolean;
     saveAllDone?: () => void;
+    isEditableByModal?: boolean;
+    editModal?: React.ComponentClass<any, any>;
 
     //onPageChange?: (skip: number, take: number) => void;
     //onSearchFilterChanged?: (q: string) => void;
@@ -111,7 +115,9 @@ export interface TableState<T> {
     parameters: any;
     uploading: boolean;
     uploadingError?: any;
-
+    editingRecordKey: number;
+    isEditableByModal?: boolean;
+    editModal?: React.ComponentClass<any, any>;
 }
 
 type RowMode = 'editor' | 'normal';
@@ -205,6 +211,7 @@ class FilterComponent extends React.Component<FilterComponentProps> {
     }
 }
 
+
 class Table<T> extends React.Component<TableProps<T>, TableState<T>> {
 
     constructor(props: TableProps<T>) {
@@ -228,10 +235,12 @@ class Table<T> extends React.Component<TableProps<T>, TableState<T>> {
             filters: {},
             parameters: {},
             uploading: false,
+            editingRecordKey: -1,
+            isEditableByModal: props.isEditableByModal,
+            editModal: props.editModal,
         };
         this.editingDictionary = [];
     }
-
 
     editingDictionary: any[];
     componentWillReceiveProps(nextProps: TableProps<T>) {
@@ -541,7 +550,27 @@ class Table<T> extends React.Component<TableProps<T>, TableState<T>> {
 
     @autobind
     private onRowEdit(key: string) {
-        this.setState({ editingKeys: [...this.state.editingKeys, key] });
+        if (!this.state.isEditableByModal) {
+            this.setState({ editingKeys: [...this.state.editingKeys, key] });
+        }
+        else {
+            //this.props.onEditItem ? this.props.onEditItem() : null;
+        }
+    }
+
+    @autobind
+    private onRequestRowEdit(record: T, key: string) {
+        if (!this.state.isEditableByModal) {
+            this.setState({ editingKeys: [...this.state.editingKeys, key] });
+        }
+        else {
+            try {
+                const newItem: T = { ...record, id: key } as T
+                this.props.onEditItem ? this.props.onEditItem(newItem) : null;
+            } catch (e) {
+
+            }
+        }
     }
 
     @autobind
@@ -621,21 +650,19 @@ class Table<T> extends React.Component<TableProps<T>, TableState<T>> {
                                             <a
                                                 href="javascript:;"
                                                 onClick={() => this.onSaveRow(form, record.key)}
-                                                style={{ marginRight: 8 }}
-                                            >
+                                                style={{ marginRight: 8 }}>
                                                 <Icon type='save' />
                                             </a>
                                         )}
                                     </EditableContext.Consumer>
                                     <Popconfirm
                                         title="¿Está seguro que desea descartar los cambios?"
-                                        onConfirm={() => this.onRowEditCancelled(record.key)}
-                                    >
+                                        onConfirm={() => this.onRowEditCancelled(record.key)}>
                                         <a><Icon type='undo' /></a>
                                     </Popconfirm>
                                 </span>
                             ) : (
-                                    <a onClick={() => this.onRowEdit(record.key)}><Icon type='edit' /></a>
+                                    <a onClick={() => this.onRequestRowEdit(record, record.key)}><Icon type='edit' /></a>
                                 )}
                         </div>
                     );
@@ -645,7 +672,6 @@ class Table<T> extends React.Component<TableProps<T>, TableState<T>> {
         var self = this;
         columns = columns.concat(this.state.columns.filter((c) => c.visible || c.visible === undefined).map(c => {
             let sorField = this.props.model.query.orderBy ? this.props.model.query.orderBy.firstOrDefault(o => o.field == (c.sortField || c.field)) : undefined;
-            console.log(c.title);
             return {
                 title: c.title,
                 dataIndex: c.field || c.title,

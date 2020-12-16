@@ -24,21 +24,6 @@ export interface User {
     adminType: AdminType;
 }
 
-function logUser(user: NewUser) {
-    try {
-        console.log("[LOG] User")
-        console.log("name: " + user.name)
-        console.log("lastName: " + user.lastName)
-        console.log("Description: " + user.description)
-        console.log("isAdmin: " + user.isAdmin)
-        if (user.isAdmin) {
-            console.log("AdminType: " + user.adminType)
-        }
-        console.log("[LOG] End")
-    } catch (e) {
-
-    }
-}
 
 @repository("@@User", "User.summary")
 export class UsersStore extends DataStore<User> {
@@ -64,7 +49,7 @@ export interface NewUser {
 }
 
 export class NewUserValidator extends Validator<NewUser> {
-    constructor() {
+    constructor()    {
         super();
 
         this.ruleFor(x => x.name)
@@ -74,6 +59,10 @@ export class NewUserValidator extends Validator<NewUser> {
         this.ruleFor(x => x.lastName)
             .notNull()
             .withMessage("LastName cant be empty");
+
+        this.ruleFor(x => x.description)
+            .maxLength(10)
+            .withMessage("Description cant exceed 10 characters");
 
         this.ruleFor(x => x.adminType)
             .notNull()
@@ -106,11 +95,15 @@ export class UserValidator extends Validator<User> {
 
         this.ruleFor(x => x.name)
             .notNull()
-            .withMessage("Name cant null");
+            .withMessage("Name cant be null");
 
         this.ruleFor(x => x.lastName)
             .notNull()
-            .withMessage("LastName cant null");
+            .withMessage("LastName cant be null");
+
+        this.ruleFor(x => x.description)
+            .maxLength(10)
+            .withMessage("Description cant exceed 10 characters");
 
         this.ruleFor(x => x.adminType)
             .notNull()
@@ -125,15 +118,14 @@ export class UserStore extends FormStore<User> {
     baseUrl: string = "api/user";
 
     protected validate(item: User) {
-        console.log("validating user")
-        logUser(item)
-        return new UserValidator().validate(item);
+        const result = new UserValidator().validate(item)
+        return result;
     }
 
     constructor() {
         super('User', {
             isBusy: false,
-            status: 'New',
+            status: 'Modified',
             item: undefined,
             result: undefined
         }, container);
@@ -142,6 +134,10 @@ export class UserStore extends FormStore<User> {
     public async Update(item: User) {
         var result = await super.patch(User_UPDATE_ITEM, `${item.id}`, item) as any;
         return result.data as CommandResult<User>;
+    }
+
+    public async UpdatePut(item: User) {
+        return super.put(User_UPDATE_ITEM, `${item.id}`, item);
     }
 
     @reduce(User_UPDATE_ITEM)

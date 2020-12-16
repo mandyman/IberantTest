@@ -2,20 +2,32 @@
 import { Form, Spin, Select, Input, Checkbox, Switch, Radio, Modal, Row, Col, Alert, InputNumber, Table } from 'antd';
 import { FormComponentProps } from 'antd/lib/form';
 let FormItem = Form.Item;
-import { AdminType, NewUser, NewUserStore, AdminTypeToString } from 'src/stores/user-store';
+import { AdminType, NewUser, NewUserStore, AdminTypeToString, UserStore, User } from 'src/stores/user-store';
 import { connect } from 'redux-scaffolding-ts'
 import { nameof } from 'src/utils/object';
 import autobind from 'autobind-decorator';
 import { GetFieldDecoratorOptions } from 'antd/lib/form/Form';
 import { formatMessage } from 'src/services/http-service';
+import { ItemState } from '../../stores/dataStore';
+import { CommandResult } from '../../stores/types';
 
 
 interface NewUserViewProps {
     onClose: (id: string | undefined, item?: NewUser) => void;
 }
 
+export interface UserViewProps {
+    onClose: (id: string | undefined, item?: NewUser) => void;
+    //onSave: (item: User, state: ItemState) => Promise<CommandResult<any>>;
+    item: User;
+}
+
 interface NewUserViewState {
 
+}
+
+interface UserViewState {
+    item: User
 }
 
 interface ClassFormBodyProps {
@@ -31,10 +43,6 @@ interface UserFormBodyState {
 }
 
 export class UserFormBody extends React.Component<ClassFormBodyProps, UserFormBodyState> {
-    state = {
-        disabled : true
-    }
-
     @autobind
     private onSwitchChanged(checked: boolean) {
         this.setState({ disabled: !checked })
@@ -88,14 +96,14 @@ export class UserFormBody extends React.Component<ClassFormBodyProps, UserFormBo
                         {getFieldDecorator(nameof<NewUser>('isAdmin'), {
                             initialValue: item.isAdmin,
                         })(
-                            <Switch onChange={this.onSwitchChanged}/>
+                            <Switch onChange={this.onSwitchChanged} checked={!this.state.disabled}/>
                         )}
                     </FormItem>
                 </Col>
                 {!disabled ? <Col span={12}>
                     <FormItem label={'Admin Type'}>
                         {getFieldDecorator(nameof<NewUser>('adminType'), {
-                            initialValue: AdminType.Normal,
+                            initialValue: item.adminType,
                         })(
                             <Select disabled={this.state.disabled}>
                                 <Select.Option value={AdminType.Normal}>Normal</Select.Option>
@@ -179,6 +187,79 @@ class NewUserView extends React.Component<NewUserViewProps & FormComponentProps,
         );
     }
 }
+
+@connect(["User", UserStore])
+export class UserView extends React.Component<UserViewProps & FormComponentProps, UserViewState> {
+    private get UserStore() {
+        return (this.props as any).User as UserStore;
+    }
+
+    constructor(props: UserViewProps & FormComponentProps) {
+        super(props);
+        this.UserStore.createNew(props.item);
+        this.state = { item: props.item }
+    }
+
+    componentWillReceiveProps(nextProps: NewUserViewProps) {
+        if (this.UserStore.state.result && this.UserStore.state.result.isSuccess)
+            nextProps.onClose((this.UserStore.state.result as any).aggregateRootId, this.UserStore.state.item)
+    }
+
+    @autobind
+    private onUpdateItem() {
+        var self = this;
+        return new Promise((resolve, reject) => {
+            self.props.form.validateFields((event: any) => {
+                var values = self.props.form.getFieldsValue();
+                if (!event) {
+                    values = { ...values, id: self.state.item.id };
+
+                    self.UserStore.change(values)
+                    self.UserStore.putSubmit(values.id).then(result => {
+                        if (result && result.isSuccess) {
+                            resolve();
+                            self.onCancelNewItem();
+                        }
+                        else {
+                            reject();
+                        }
+                    });
+                }
+            });
+        })
+    }
+
+    @autobind
+    private onCancelNewItem() {
+        this.UserStore.clear();
+        this.props.onClose(undefined);
+    }
+
+    public render() {
+        const { getFieldDecorator } = this.props.form;
+        return (
+            <Modal
+                maskClosable={false}
+                visible
+                onCancel={this.onCancelNewItem}
+                onOk={this.onUpdateItem}
+                closable={false}
+                width='800px'
+                title={"Update User"}>
+                {this.UserStore.state.result && !this.UserStore.state.result.isSuccess &&
+                    <Alert type='error'
+                    message="Ha ocurrido un error"
+                    description={formatMessage(this.UserStore.state.result.messages[0])}
+                    />
+                }
+                <Spin spinning={this.UserStore.state.isBusy}>
+                    <UserFormBody item={this.UserStore.state.item} getFieldDecorator={getFieldDecorator} getFieldValue={this.props.form.getFieldValue} setFieldsValue={this.props.form.setFieldsValue} onSave={this.onUpdateItem} />
+                </Spin>
+            </Modal>
+        );
+    }
+}
+export const ExUserView = Form.create({})(UserView as any) as any as React.ComponentClass<UserViewProps>
 
 // Wire up the React component to the Redux store
 export default Form.create({})(NewUserView as any) as any as React.ComponentClass<NewUserViewProps>;

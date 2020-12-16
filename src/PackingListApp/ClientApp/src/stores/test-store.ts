@@ -48,7 +48,6 @@ export class NewTestItemStore extends FormStore<NewTestItem> {
     baseUrl: string = "api/test";
 
     protected validate(item: NewTestItem) {
-        console.log("validating TestItem")
         return (new NewTestValidator()).validate(item);
     }
 
