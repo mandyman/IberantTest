@@ -10,8 +10,8 @@ namespace PackingListApp.Services
 {
     public class TestServices : ITestServices
     {
-        private readonly TestContext _context;
-        public TestServices(TestContext context)
+        private readonly AppDbContext _context;
+        public TestServices(AppDbContext context)
         {
             _context = context;
         }
@@ -47,6 +47,13 @@ namespace PackingListApp.Services
             _context.SaveChanges();
             return id;
 
+        }
+
+        public void Delete(int id)
+        {
+            var testItem = _context.TestModels.First(n => n.Id == id);
+            _context.TestModels.Remove(testItem);
+            _context.SaveChanges();
         }
     }
 }

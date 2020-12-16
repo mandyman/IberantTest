@@ -13,48 +13,49 @@ namespace PackingListApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TestController : ControllerBase
+    public class UserController : ControllerBase
     {
-        public readonly ITestServices _testService;
-        public TestController(ITestServices testService)
+        // Services are used to interact with dbContext
+        public readonly IUserServices _userService;
+        public UserController(IUserServices userServices)
         {
-            _testService = testService;
+            _userService = userServices;
         }
-        // GET: api/Test
+        // GET: api/User
         [HttpGet]
-        public IActionResult Get(ODataQueryOptions<TestModel> options)
+        public IActionResult Get(ODataQueryOptions<UserModel> options)
         {
-            var list = _testService.GetAll();
-            return Ok(new QueryResult<TestModel>(list, list.Count));
+            var list = _userService.GetAll();
+            return Ok(new QueryResult<UserModel>(list, list.Count));
         }
 
-        // GET: api/Test/5
-        [HttpGet("{id}", Name = "GetUserById")]
+        // GET: api/User/5
+        [HttpGet("{id}", Name = "Get")]
         public IActionResult Get(int id)
         {
-            return Ok(_testService.Get(id));
+            return Ok(_userService.Get(id));
         }
 
-        // POST: api/Test
+        // POST: api/User
         [HttpPost]
-        public IActionResult Post([FromBody] NewTestModel value)
+        public IActionResult Post([FromBody] NewUserModel value)
         {
-            var id = _testService.Add(value);
+            var id = _userService.Add(value);
             return Ok(new CommandHandledResult(true, id.ToString(), id.ToString(), id.ToString()));
 
         }
 
         [HttpPut("{id}")]
-        public  IActionResult Put(int id, [FromBody] TestModel item)
+        public IActionResult Put(int id, [FromBody] UserModel item)
         {
-            _testService.Put(id, item);
+            _userService.Put(id, item);
             return Ok(new CommandHandledResult(true, id.ToString(), id.ToString(), id.ToString()));
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            _testService.Delete(id);
+            _userService.Delete(id);
             return Ok(new CommandHandledResult(true, id.ToString()));
         }
     }
