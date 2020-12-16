@@ -8,9 +8,9 @@ using PackingListApp.EntityFramework;
 
 namespace PackingListApp.Migrations
 {
-    [DbContext(typeof(TestContext))]
-    [Migration("20191205230503_init")]
-    partial class init
+    [DbContext(typeof(PackingListAppContext))]
+    [Migration("20201216000554_DescriptionRestriction")]
+    partial class DescriptionRestriction
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -19,6 +19,30 @@ namespace PackingListApp.Migrations
                 .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("PackingListApp.Models.MyUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Address");
+
+                    b.Property<int>("AdminType");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(10);
+
+                    b.Property<bool>("IsAdmin");
+
+                    b.Property<string>("LastName");
+
+                    b.Property<string>("Name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MyUsers");
+                });
 
             modelBuilder.Entity("PackingListApp.Models.TestModel", b =>
                 {
