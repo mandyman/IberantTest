@@ -36,7 +36,16 @@ export interface NewUserItem {
     lastname: string,
     address: string,
     isAdmin: boolean,
-    adminType: string,
+    adminType: number,
+}
+
+export interface EditUserItem {
+    id: number;
+    name: string,
+    lastname: string,
+    address: string,
+    isAdmin: boolean,
+    adminType: number,
 }
 
 export class NewUserValidator extends Validator<NewUserItem> {
@@ -108,3 +117,43 @@ export class UserItemStore extends FormStore<UserItem> {
         return super.onPatch();
     }
 }
+
+
+//export class EditUserValidator extends Validator<EditUserItem> {
+//    constructor() {
+//        super();
+
+//        this.ruleFor(x => x.name)
+//            .notNull()
+//            .withMessage("Name can not be null");
+
+//    }
+//}
+
+//@repository("@@UserItem", "UserItem.detail")
+//export class EditUserItemStore extends FormStore<EditUserItem> {
+//    baseUrl: string = "api/user";
+
+//    protected validate(item: EditUserItem) {
+//        return new EditUserValidator().validate(item);
+//    }
+
+//    constructor() {
+//        super('Edit_UserItem', {
+//            isBusy: false,
+//            status: 'New',
+//            item: undefined,
+//            result: undefined
+//        }, container);
+//    }
+
+//    public async Update(item: UserItem) {
+//        var result = await super.patch(UserItem_UPDATE_ITEM, `${item.id}`, item) as any;
+//        return result.data as CommandResult<UserItem>;
+//    }
+
+//    @reduce(UserItem_UPDATE_ITEM)
+//    protected onUpdateBillingOrder(): AsyncAction<AxiosResponse<CommandResult<UserItem>>, DataModel<UserItem>> {
+//        return super.onPatch();
+//    }
+//}

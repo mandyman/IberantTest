@@ -15,13 +15,16 @@ import { Link } from "react-router-dom";
 import { formatDate } from "src/utils/object";
 const { Content } = Layout;
 import NewUserItemView from "./body"
+import EditUserItemView from "./edit"
 import { AdminTypes } from "./body"
-
+    
 interface UserItemListProps extends RouteComponentProps { }
 
 interface UserItemListState {
     query: Query;
     newShow: boolean;
+    editShow: boolean;
+    editingItem: UserItem;
 }
 
 @connect(["UserItems", UserItemsStore])
@@ -46,7 +49,9 @@ UserItemListState
                 skip: 0,
                 take: 10
             },
-            newShow: false
+            newShow: false,
+            editShow: false,
+            editingItem: { id: 0, name: "", lastname: "", address: "", adminType: -1, isAdmin: false }
         };
     }
 
@@ -84,10 +89,23 @@ UserItemListState
         return result;
     }
 
+    @autobind
+    private async onEditItem(item: UserItem) {
+        this.setState({ editShow: true, editingItem: item });
+        console.log("AAAAAAA", item);
+        this.load(this.state.query);
+    }
+
 
     @autobind
     private onNewItemClosed() {
         this.setState({ newShow: false });
+        this.load(this.state.query);
+    }
+
+    @autobind
+    private onEditItemClosed() {
+        this.setState({ editShow: false, editingItem: { id: 0, name: "", lastname: "", address: "", adminType: -1, isAdmin: false} });
         this.load(this.state.query);
     }
 
@@ -108,6 +126,12 @@ UserItemListState
         const tableModel = {
             query: this.state.query,
             columns: [
+                {
+                    field: "",
+                    title: "Edit User",
+                    renderer: data =>
+                        <a onClick={() => this.onEditItem(data)}>Edit</a> 
+                },
                 {
                     field: "name",
                     title: "Name",
@@ -141,11 +165,11 @@ UserItemListState
                     renderer: data => <span>{data.isAdmin ? AdminTypes[data.adminType] : ''}</span>,
                     editor: data =>
                         <Select value={data.adminType}>
-                        {
-                            Object.keys(AdminTypes)
-                                .filter(this.stringIsNumber)
-                                .map((key: any) =>
-                                    <option value={key}>{AdminTypes[key]}</option>
+                            {
+                                Object.keys(AdminTypes)
+                                    .filter(this.stringIsNumber)
+                                    .map((key: any) =>
+                                        <option key={key} value={key}>{AdminTypes[key]}</option>
                                 )
                         }
                     </Select>
@@ -190,6 +214,7 @@ UserItemListState
                             canEdit={true}
                         />
                         {this.state.newShow && <NewUserItemView onClose={this.onNewItemClosed} />}
+                        {this.state.editShow && <EditUserItemView item={this.state.editingItem} onClose={this.onEditItemClosed} />}
                     </div>
                 </Content>
             </Layout>

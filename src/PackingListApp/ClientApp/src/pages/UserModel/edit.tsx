@@ -2,7 +2,7 @@
 import { Form, Spin, Select, Input, Checkbox, Modal, Row, Col, Alert, InputNumber, Table } from 'antd';
 import { FormComponentProps } from 'antd/lib/form';
 let FormItem = Form.Item;
-import { NewUserItem, NewUserItemStore } from 'src/stores/user-store';
+import {  UserItem, UserItemStore } from 'src/stores/user-store';
 import { connect } from 'redux-scaffolding-ts'
 import { nameof } from 'src/utils/object';
 import autobind from 'autobind-decorator';
@@ -10,25 +10,25 @@ import { GetFieldDecoratorOptions } from 'antd/lib/form/Form';
 import { formatMessage } from 'src/services/http-service';
 import { max } from 'moment';
 
-
-interface NewUserItemViewProps {
-    onClose: (id: string | undefined, item?: NewUserItem) => void;
+interface EditUserItemViewProps {
+    item: UserItem ,
+    onClose: (id: string | undefined, item?: UserItem) => void;
 }
 
-interface NewUserItemViewState {
-
+interface EditUserItemViewState {
+    item: UserItem
 }
 
 interface ClassFormBodyProps {
-    item: NewUserItem | undefined,
+    item: UserItem | undefined,
     onSave?: () => Promise<any>;
     setFieldsValue(obj: Object): void;
     getFieldValue(fieldName: string): any;
     getFieldDecorator<T extends Object = {}>(id: keyof T, options?: GetFieldDecoratorOptions): (node: React.ReactNode) => React.ReactNode;
 }
 
- export enum AdminTypes {
-    'Normal', 
+export enum AdminTypes {
+    'Normal',
     'Vip',
     'King'
 }
@@ -39,14 +39,14 @@ export class UserItemFormBody extends React.Component<ClassFormBodyProps> {
 
     render() {
 
-       const { getFieldDecorator } = this.props;
-
-        var item = this.props.item || {} as NewUserItem;
+        const { getFieldDecorator } = this.props;
+        console.log("CCCCCC", this.props);
+        var item = this.props.item || {} as UserItem;
         return <Form id="modaForm" onSubmit={() => { if (this.props.onSave) { this.props.onSave(); } }}>
             <Row gutter={24}>
                 <Col span={8}>
                     <FormItem label={"Name"}>
-                        {getFieldDecorator(nameof<NewUserItem>('name'), {
+                        {getFieldDecorator(nameof<UserItem>('name'), {
                             initialValue: item.name,
                             rules: [
                                 {
@@ -62,7 +62,7 @@ export class UserItemFormBody extends React.Component<ClassFormBodyProps> {
                 </Col>
                 <Col span={8}>
                     <FormItem label={'LastName'}>
-                        {getFieldDecorator(nameof<NewUserItem>('lastname'), {
+                        {getFieldDecorator(nameof<UserItem>('lastname'), {
                             initialValue: item.lastname,
                             rules: [
                                 {
@@ -77,11 +77,11 @@ export class UserItemFormBody extends React.Component<ClassFormBodyProps> {
                 </Col>
                 <Col span={8}>
                     <FormItem label={'Address'}>
-                        {getFieldDecorator(nameof<NewUserItem>('address'), {
+                        {getFieldDecorator(nameof<UserItem>('address'), {
                             initialValue: item.address,
                             rules: [
                                 {
-                                    required:true,
+                                    required: true,
                                     max: 10,
                                     message: 'Address must have at most 10 characters'
                                 }
@@ -92,18 +92,18 @@ export class UserItemFormBody extends React.Component<ClassFormBodyProps> {
                     </FormItem>
                 </Col>
             </Row>
-            <Row>
-                <FormItem label={'Is Admin'}>
-                    {getFieldDecorator(nameof<NewUserItem>('isAdmin'), {
+            <Row>            
+                <FormItem label={'Is Admin'} className="inlineForm">
+                    {getFieldDecorator(nameof<UserItem>('isAdmin'), {
                         initialValue: item.isAdmin,
                     })(
-                        <Checkbox />
+                        <Checkbox checked={this.props.getFieldValue('isAdmin')} />
                     )}
                 </FormItem>
             </Row>
             <Row>
                 <FormItem label={'Admin Type'}>
-                    {getFieldDecorator(nameof<NewUserItem>('adminType'), {
+                    {getFieldDecorator(nameof<UserItem>('adminType'), {
                         initialValue: item.adminType,
                         rules: [
                             {
@@ -114,14 +114,13 @@ export class UserItemFormBody extends React.Component<ClassFormBodyProps> {
                         <Select
                             value={item.adminType}
                             disabled={!this.props.getFieldValue('isAdmin')}
-                            placeholder={this.props.getFieldValue('isAdmin')?"Select an admin type":""}
-                            >
+                        >
                             {
                                 Object.keys(AdminTypes)
                                     .filter(this.stringIsNumber)
                                     .map((key: any) =>
                                         <option key={key} value={key}>{AdminTypes[key]}</option>
-                                )
+                                    )
                             }
                         </Select>
                     )}
@@ -131,29 +130,42 @@ export class UserItemFormBody extends React.Component<ClassFormBodyProps> {
     }
 }
 
-@connect(["newUserItem", NewUserItemStore])
-class NewUserItemView extends React.Component<NewUserItemViewProps & FormComponentProps, NewUserItemViewState> {
+
+
+@connect(["userItem", UserItemStore])   
+class EditUserItemView extends React.Component<EditUserItemViewProps & FormComponentProps, EditUserItemViewState> {
     private get UserItemsStore() {
-        console.log("FFFFF", this.props);
-        return (this.props as any).newUserItem as NewUserItemStore;
+        console.log("DDDDDDDD", this.props);
+        return (this.props as any).userItem as UserItemStore;
     }
 
-    constructor(props: NewUserItemViewProps & FormComponentProps) {
+    constructor(props: EditUserItemViewProps & FormComponentProps) {
         super(props);
-        this.UserItemsStore.createNew({} as any);
+
+        this.state = {
+            item: { id: -1, name: "", lastname: "", address: "", adminType: -1, isAdmin: false }
+        };
     }
 
-    componentWillReceiveProps(nextProps: NewUserItemViewProps) {
+    componentWillReceiveProps(nextProps: EditUserItemViewProps) {
+        console.log("BBBBBBBBBB", nextProps);
+
+        if (nextProps.item.id !== this.props.item.id) {
+            this.UserItemsStore.state.item
+            this.setState({ item: nextProps.item });
+        }
         if (this.UserItemsStore.state.result && this.UserItemsStore.state.result.isSuccess)
             nextProps.onClose((this.UserItemsStore.state.result as any).aggregateRootId, this.UserItemsStore.state.item)
     }
 
     @autobind
-    private onCreateNewItem() {
+    private onEditItem() {
         var self = this;
+        console.log("VALUES", self.props.form.getFieldsValue());
         return new Promise((resolve, reject) => {
             self.props.form.validateFields(event => {
                 var values = self.props.form.getFieldsValue();
+                
                 if (!event) {
                     values = { ...values, };
                     self.UserItemsStore.change(values);
@@ -170,22 +182,22 @@ class NewUserItemView extends React.Component<NewUserItemViewProps & FormCompone
     }
 
     @autobind
-    private onCancelNewItem() {
+    private onCancelEditItem() {
         this.UserItemsStore.clear();
         this.props.onClose(undefined);
     }
 
     public render() {
         const { getFieldDecorator } = this.props.form;
-        return (
+        return (          
             <Modal
                 maskClosable={false}
                 visible
-                onCancel={this.onCancelNewItem}
-                onOk={this.onCreateNewItem}
+                onCancel={this.onCancelEditItem}
+                onOk={this.onEditItem}
                 closable={false}
                 width='800px'
-                title={"New UserItem"}>
+                title={"Edit UserItem"}>
                 {this.UserItemsStore.state.result && !this.UserItemsStore.state.result.isSuccess &&
                     <Alert type='error'
                         message="Ha ocurrido un error"
@@ -193,12 +205,13 @@ class NewUserItemView extends React.Component<NewUserItemViewProps & FormCompone
                     />
                 }
                 <Spin spinning={this.UserItemsStore.state.isBusy}>
-                    <UserItemFormBody item={this.UserItemsStore.state.item} getFieldDecorator={getFieldDecorator} getFieldValue={this.props.form.getFieldValue} setFieldsValue={this.props.form.setFieldsValue} onSave={this.onCreateNewItem} />
+                    <UserItemFormBody item={this.props.item} getFieldDecorator={getFieldDecorator} getFieldValue={this.props.form.getFieldValue} setFieldsValue={this.props.form.setFieldsValue} onSave={this.onEditItem} />
                 </Spin>
             </Modal>
         );
     }
 }
 
+
 // Wire up the React component to the Redux store
-export default Form.create({})(NewUserItemView as any) as any as React.ComponentClass<NewUserItemViewProps>;
+export default Form.create({})(EditUserItemView as any) as any as React.ComponentClass<EditUserItemViewProps>;
