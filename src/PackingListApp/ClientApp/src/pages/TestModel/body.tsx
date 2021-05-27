@@ -86,7 +86,7 @@ class NewTestItemView extends React.Component<NewTestItemViewProps & FormCompone
     @autobind
     private onCreateNewItem() {
         var self = this;
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             self.props.form.validateFields(event => {
                 var values = self.props.form.getFieldsValue();
                 if (!event) {

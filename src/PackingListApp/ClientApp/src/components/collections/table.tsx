@@ -80,6 +80,7 @@ export interface TableProps<T> {
     onSelection?: (ids: any[]) => void;
     autosave?: boolean;
     saveAllDone?: () => void;
+    onEdit?: (item: T) => any;
 
     //onPageChange?: (skip: number, take: number) => void;
     //onSearchFilterChanged?: (q: string) => void;
@@ -137,6 +138,7 @@ const EditableFormRow = Form.create()(EditableRow);
 
 class EditableCell extends React.Component<any> {
     render() {
+
         let {
             centered,
             required,
@@ -150,22 +152,24 @@ class EditableCell extends React.Component<any> {
             editorValuePropName,
             ...restProps
         } = this.props;
+
         return (
             <EditableContext.Consumer>
                 {(form: any) => {
-                    const { getFieldDecorator } = form;
+                    const { getFieldDecorator, getFieldsValue} = form;
+                    var values = getFieldsValue();
                     return (
                         <td {...restProps} className={editing ? `ant-table-cell-editing ${restProps.className}` : restProps.className} style={{ textAlign: centered ? 'center' : '', ...restProps.style }}>
-                            {editing && editor ? (
+                            {editing  && editor ? (
                                 <FormItem style={{ margin: 0 }}>
                                     {getFieldDecorator(dataIndex, {
                                         valuePropName: editorValuePropName || 'value',
-                                        initialValue: record[dataIndex],
+                                        initialValue: record[dataIndex] || '',
                                         rules: [{
                                             required: required || false,
                                             message: `Field '${title}' is required!`,
                                         }]
-                                    })(editor(record))}
+                                    })(editor(values))}
                                 </FormItem>
                             ) : restProps.children}
                         </td>
@@ -606,6 +610,8 @@ class Table<T> extends React.Component<TableProps<T>, TableState<T>> {
         let columns = [];
 
         if (this.props.canEdit) {
+
+
             columns.push({
                 title: "",
                 width: 50,
@@ -635,7 +641,7 @@ class Table<T> extends React.Component<TableProps<T>, TableState<T>> {
                                     </Popconfirm>
                                 </span>
                             ) : (
-                                    <a onClick={() => this.onRowEdit(record.key)}><Icon type='edit' /></a>
+                                <a onClick={() => this.props.onEdit ? this.props.onEdit(record): this.onRowEdit(record.key)}><Icon type='edit' /></a>
                                 )}
                         </div>
                     );

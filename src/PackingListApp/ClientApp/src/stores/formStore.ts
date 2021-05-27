@@ -7,6 +7,7 @@ import autobind from 'autobind-decorator';
 import { clone, delay } from '../utils/object';
 import * as lakmus from 'lakmus';
 import { createPatch } from 'rfc6902';
+import { debug } from 'console';
 
 export interface FormModel<T> extends CommandModel<T> {
     status: 'New' | 'Unchanged' | 'Modified';
@@ -89,11 +90,16 @@ export abstract class FormStore<T> extends ReduxRepository<FormModel<T>> {
             };
         }, 'AsyncAction');
 
-        this.addReducer(this.ENTITY_CHANGED, (item: Partial<T>): FormModel<T> => ({
-            ...this.state,
-            status: this.state.status === 'Unchanged' ? 'Modified' : this.state.status,
-            item: Object.assign((this.state || {} as any).item || {}, item || {}) as any,
-        }), 'Simple');
+        this.addReducer(this.ENTITY_CHANGED, (item: Partial<T>): FormModel<T> => {
+
+            const newSate = {
+                ...this.state,
+                status: this.state.status === 'Unchanged' ? 'Modified' : this.state.status,
+                item: Object.assign((this.state || {} as any).item || {}, item || {}) as any,
+            }
+            debugger
+            return newSate;
+        }, 'Simple');
         this.addReducer(this.ENTITY_VALIDATED, (result: lakmus.ValidationResult): FormModel<T> => ({
             ...this.state,
             result: {

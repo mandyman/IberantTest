@@ -52,6 +52,7 @@ namespace PackingListApp
                 }
             });
             services.AddTransient<ITestServices, TestServices>();
+            services.AddTransient<IUserManagerService, UserManagerService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -84,7 +85,6 @@ namespace PackingListApp
             app.UseSpa(spa =>
             {
                 spa.Options.SourcePath = "ClientApp";
-
 
                 if (env.IsDevelopment())
                 {

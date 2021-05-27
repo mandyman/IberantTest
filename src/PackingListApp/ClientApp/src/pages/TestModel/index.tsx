@@ -158,6 +158,7 @@ TestItemListState
                             onQueryChanged={(q: Query) => this.onQueryChanged(q)}
                             onNewItem={this.onNewItem}
                             onRefresh={() => this.load(this.state.query)}
+                            onDeleteRow={(item, state) => this.onDeleteRow(item,state)}
                             canDelete={true}
                             canCreateNew={true}
                             onSaveRow={this.onSaveItem}

@@ -29,6 +29,13 @@ namespace PackingListApp.Services
             return newtest.Id;
         }
 
+        public int Delete(TestModel item)
+        {
+            _context.Remove(item);
+            _context.SaveChanges();
+            return item.Id;
+        }
+
         public TestModel Get(int id)
         {
             return _context.TestModels.FirstOrDefault(t => t.Id == id);
